@@ -1,6 +1,10 @@
 # Create your models here.
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils.timezone import now
+from django.core.mail import send_mail
+from django.contrib.auth.models import User
+
 
 # User Model (Extending Django’s built-in user authentication)
 class User(AbstractUser):
@@ -45,17 +49,23 @@ class Supplier(models.Model):
     def __str__(self):
         return self.name
 
-# Product Model
+# Inventory Model
 class Product(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True)
-    quantity = models.IntegerField(default=0)
+    stock_quantity = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    reorder_threshold = models.IntegerField(default=10)
+    last_updated = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
+
+    def needs_reorder(self):
+        return self.stock_quantity <= self.reorder_threshold
+
 
 # Order Model (Stock In/Out)
 class Order(models.Model):
@@ -94,3 +104,70 @@ class InventoryLog(models.Model):
 
     def __str__(self):
         return f"{self.change_type} {self.quantity_changed} of {self.product.name}"
+
+
+# Sales Model
+class Sale(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity_sold = models.IntegerField()
+    date_sold = models.DateTimeField(default=now)
+
+    def save(self, *args, **kwargs):
+        # Reduce stock when a sale happens
+        self.product.stock_quantity -= self.quantity_sold
+        self.product.save()
+        super().save(*args, **kwargs)
+
+# AI Prediction Model (Placeholder)
+class InventoryPrediction(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    predicted_demand = models.IntegerField()
+    prediction_date = models.DateTimeField(default=now)
+    confidence_score = models.FloatField(default=0.0)  # Added confidence score for accuracy tracking
+
+
+# Function to check inventory levels and notify store manager
+def check_inventory_levels():
+    low_stock_products = Product.objects.filter(stock_quantity__lte=models.F('reorder_threshold'))
+    if low_stock_products.exists():
+        message = "The following products need restocking:\n" + "\n".join([p.name for p in low_stock_products])
+        send_mail(
+            'Inventory Alert',
+            message,
+            'admin@inventory.com',
+            ['manager@store.com'],
+            fail_silently=False,
+        )
+
+
+class UserActivityLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    action = models.CharField(max_length=100)  # e.g., 'login', 'update_product'
+    table_name = models.CharField(max_length=100)
+    record_id = models.IntegerField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.action} at {self.timestamp}"
+
+ 
+
+class UserActivityLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    action = models.CharField(max_length=100)  # e.g., 'login', 'update_product'
+    table_name = models.CharField(max_length=100)
+    record_id = models.IntegerField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.action} at {self.timestamp}"
+
+# Function to log user actions
+def log_user_activity(user, action, table_name, record_id=None):
+    UserActivityLog.objects.create(
+        user=user,
+        action=action,
+        table_name=table_name,
+        record_id=record_id
+    )
+
