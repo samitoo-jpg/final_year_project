@@ -1,15 +1,13 @@
 from django.urls import path, include
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.routers import DefaultRouter
-from inventory import views
 from .views import (
-    UserViewSet, CategoryViewSet, SupplierViewSet,
-    ProductViewSet, SaleViewSet, OrderViewSet, OrderItemViewSet, InventoryLogViewSet, InventoryPredictionViewSet
+    UserViewSet, CategoryViewSet, SupplierViewSet, ProductViewSet, 
+    OrderViewSet, OrderItemViewSet, InventoryLogViewSet, SaleViewSet, 
+    InventoryPredictionViewSet, update_inventory, get_inventory, home, about
 )
 
-from django.urls import path
-from .views import get_inventory, update_inventory
-
-# Create API Router
+# ✅ Using DefaultRouter for automatic API routing
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'categories', CategoryViewSet)
@@ -18,23 +16,25 @@ router.register(r'products', ProductViewSet)
 router.register(r'orders', OrderViewSet)
 router.register(r'order-items', OrderItemViewSet)
 router.register(r'inventory-logs', InventoryLogViewSet)
-router.register(r'predictions', InventoryPredictionViewSet) 
+router.register(r'sales', SaleViewSet)
+router.register(r'inventory-predictions', InventoryPredictionViewSet)
 
-urlpatterns=[
-    path('',views.home,name='my_home'),
-    path('about/',views.about,name='my_about'),
+# ✅ Define URL Patterns
+urlpatterns = [
+    # Home and About Pages
+    path('', home, name='home'),
+    path('about/', about, name='about'),
+
+    # Inventory Management APIs
+    path('update-inventory/', update_inventory, name='update-inventory'),
+    path('get-inventory/', get_inventory, name='get-inventory'),
+
+    # ✅ Include all ViewSets
     path('api/', include(router.urls)),
-]
 
-urlpatterns = [
-    path('api/products/', ProductViewSet.as_view({'get': 'list', 'post': 'create'}), name='product-list'),
-    path('api/products/<int:pk>/', ProductViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='product-detail'),
-    path('api/sales/', SaleViewSet.as_view({'get': 'list', 'post': 'create'}), name='sale-list'),
-    path('api/predictions/', InventoryPredictionViewSet.as_view({'get': 'list', 'post': 'create'}), name='prediction-list'), 
+    # ✅ API Authentication (JWT)
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # Login (Returns access + refresh tokens)
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh Token (Returns new access token)
 ]
 
 
-urlpatterns = [
-    path('inventory/', get_inventory, name='get_inventory'),
-    path('inventory/update/', update_inventory, name='update_inventory'),
-]

@@ -3,10 +3,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.timezone import now
 from django.core.mail import send_mail
-from django.contrib.auth.models import User
 
-
-# User Model (Extending Django’s built-in user authentication)
+# ✅ User Model (Extending Django’s built-in authentication)
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('admin', 'Admin'),
@@ -16,20 +14,20 @@ class User(AbstractUser):
 
     groups = models.ManyToManyField(
         "auth.Group",
-        related_name="inventory_users",  # ✅ Add a unique related_name
+        related_name="inventory_users",
         blank=True
     )
 
     user_permissions = models.ManyToManyField(
         "auth.Permission",
-        related_name="inventory_user_permissions",  # ✅ Add a unique related_name
+        related_name="inventory_user_permissions",
         blank=True
     )
 
     def __str__(self):
         return self.username
 
-# Category Model
+# ✅ Category Model
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
@@ -37,7 +35,7 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-# Supplier Model
+# ✅ Supplier Model
 class Supplier(models.Model):
     name = models.CharField(max_length=100)
     contact_person = models.CharField(max_length=100, blank=True, null=True)
@@ -49,7 +47,7 @@ class Supplier(models.Model):
     def __str__(self):
         return self.name
 
-# Inventory Model
+# ✅ Product Model
 class Product(models.Model):
     name = models.CharField(max_length=255)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
@@ -66,8 +64,7 @@ class Product(models.Model):
     def needs_reorder(self):
         return self.stock_quantity <= self.reorder_threshold
 
-
-# Order Model (Stock In/Out)
+# ✅ Order Model (Stock In/Out)
 class Order(models.Model):
     ORDER_TYPE_CHOICES = (
         ('in', 'Stock In'),
@@ -81,7 +78,7 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} - {self.order_type}"
 
-# Order Items Model
+# ✅ Order Items Model
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -91,7 +88,7 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
 
-# Inventory Logs Model
+# ✅ Inventory Log Model
 class InventoryLog(models.Model):
     CHANGE_TYPE_CHOICES = (
         ('added', 'Added'),
@@ -105,8 +102,7 @@ class InventoryLog(models.Model):
     def __str__(self):
         return f"{self.change_type} {self.quantity_changed} of {self.product.name}"
 
-
-# Sales Model
+# ✅ Sales Model
 class Sale(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity_sold = models.IntegerField()
@@ -118,31 +114,17 @@ class Sale(models.Model):
         self.product.save()
         super().save(*args, **kwargs)
 
-# AI Prediction Model (Placeholder)
+# ✅ AI Inventory Prediction Model
 class InventoryPrediction(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     predicted_demand = models.IntegerField()
     prediction_date = models.DateTimeField(default=now)
-    confidence_score = models.FloatField(default=0.0)  # Added confidence score for accuracy tracking
+    confidence_score = models.FloatField(default=0.0)
 
-
-# Function to check inventory levels and notify store manager
-def check_inventory_levels():
-    low_stock_products = Product.objects.filter(stock_quantity__lte=models.F('reorder_threshold'))
-    if low_stock_products.exists():
-        message = "The following products need restocking:\n" + "\n".join([p.name for p in low_stock_products])
-        send_mail(
-            'Inventory Alert',
-            message,
-            'admin@inventory.com',
-            ['manager@store.com'],
-            fail_silently=False,
-        )
-
-
+# ✅ User Activity Log Model
 class UserActivityLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    action = models.CharField(max_length=100)  # e.g., 'login', 'update_product'
+    action = models.CharField(max_length=100)
     table_name = models.CharField(max_length=100)
     record_id = models.IntegerField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -150,19 +132,7 @@ class UserActivityLog(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.action} at {self.timestamp}"
 
- 
-
-class UserActivityLog(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    action = models.CharField(max_length=100)  # e.g., 'login', 'update_product'
-    table_name = models.CharField(max_length=100)
-    record_id = models.IntegerField(null=True, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} - {self.action} at {self.timestamp}"
-
-# Function to log user actions
+# ✅ Function to log user actions
 def log_user_activity(user, action, table_name, record_id=None):
     UserActivityLog.objects.create(
         user=user,
@@ -170,4 +140,5 @@ def log_user_activity(user, action, table_name, record_id=None):
         table_name=table_name,
         record_id=record_id
     )
+
 
