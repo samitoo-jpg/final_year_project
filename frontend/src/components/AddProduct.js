@@ -20,11 +20,13 @@ const AddProduct = ({ onProductAdded }) => {
     e.preventDefault();
     try {
       await api.post("/api/products/", product);
-      onProductAdded(); // Refresh product list
+      setProduct({ name: "", category: "", supplier: "", quantity: "", price: "" });
+      alert("Product added successfully!");
+      onProductAdded();
     } catch (error) {
       console.error("Error adding product:", error);
     }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit}>

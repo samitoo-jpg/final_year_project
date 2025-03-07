@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ Import navigation hook
 import api from "../axiosConfig";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // ✅ Navigation
 
   useEffect(() => {
     fetchProducts();
@@ -11,8 +13,7 @@ const ProductList = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get("/api/products/");  // ✅ Corrected path
-      console.log("API Response:", response.data);  // ✅ Debugging step
+      const response = await api.get("/api/products/");
       setProducts(response.data);
       setLoading(false);
     } catch (error) {
@@ -20,11 +21,11 @@ const ProductList = () => {
       setLoading(false);
     }
   };
-  
 
   return (
     <div>
       <h2>Product List</h2>
+      <button onClick={() => navigate("/manage-products")}>Manage Products</button> {/* ✅ Button */}
       {loading ? (
         <p>Loading products...</p>
       ) : (
@@ -54,4 +55,5 @@ const ProductList = () => {
 };
 
 export default ProductList;
+
 

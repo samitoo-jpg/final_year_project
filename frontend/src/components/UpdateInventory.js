@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import api from "../api/axios"; // ✅ Import axios instance
+import api from "../axiosConfig";
 
 const UpdateInventory = () => {
   const [productId, setProductId] = useState("");
