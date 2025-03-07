@@ -16,8 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('',include('inventory.urls')),
+    # ✅ Django Admin Panel (Optional)
+    path('admin/', admin.site.urls), 
+
+    # ✅ Authentication (Login & Token Refresh)
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # Login
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh Token
+
+    # ✅ Include app URLs (Assuming your app is named `inventory`)
+    path('api/', include('inventory.urls')),  # Routes from `inventory/urls.py`
 ]

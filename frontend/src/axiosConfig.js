@@ -16,12 +16,16 @@ const api = axios.create({
   },
 });
 
-// ✅ Attach token to every request
+// ✅ Attach token to secured requests only
 api.interceptors.request.use(
   (config) => {
-    const token = getAuthToken();
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+    // Exclude public endpoints from token attachment
+    const publicEndpoints = ["/products/"]; // Add more if needed
+    if (!publicEndpoints.includes(config.url)) {
+      const token = getAuthToken();
+      if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -31,4 +35,5 @@ api.interceptors.request.use(
 );
 
 export default api;
+
 

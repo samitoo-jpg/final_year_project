@@ -43,8 +43,9 @@ class SupplierViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    # 🔴 No authentication required (public access)
+    authentication_classes = []  # Remove authentication
+    permission_classes = []  # Remove permission restrictions
 
 # ✅ API ViewSet for managing Orders
 class OrderViewSet(viewsets.ModelViewSet):

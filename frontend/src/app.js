@@ -1,18 +1,42 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Login from "./auth/Login"; // Use correct casing
-import InventoryDashboard from "./components/InventoryDashboard"; // Ensure this file exists
+import Login from "./components/Login";
+import ProductList from "./components/ProductList";
+import InventoryDashboard from "./components/InventoryDashboard";
+import ProtectedRoute from "./components/ProtectedRoute"; // Ensure you have this component
+import "./App.css";
 
 const App = () => {
   return (
     <Router>
+    <div>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={<InventoryDashboard />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <InventoryDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/products"  // 🔥 Changed from "/inventory" to "/products"
+          element={
+            <ProtectedRoute>
+              <ProductList />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-    </Router>
+    </div>
+  </Router>
+  
   );
 };
 
 export default App;
+
+
+
 
